@@ -1,12 +1,10 @@
 from fastapi import FastAPI
-from app.routers import prioridade
-from app.routers import health
+from app.routers import dashboard
 
-app = FastAPI()
+app = FastAPI(
+    title="Weedle API",
+    description="API para análise de KPIs e métricas de negócio",
+    version="1.0.0"
+)
 
-app.include_router(prioridade.router)
-app.include_router(health.router)
-
-@app.get("/")
-def root():
-    return {"message": "API online"}
+app.include_router(dashboard.router)
