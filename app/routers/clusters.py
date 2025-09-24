@@ -40,28 +40,36 @@ async def get_all_clusters(
         
         cluster_results = db.execute(text(query_clusters)).fetchall()
         
-        # Query para buscar ações
-        query_acoes = """
-        SELECT 
-            ID,
-            CLUSTER_ID,
-            ACAO
-        FROM CLUSTER_ACOES
-        ORDER BY CLUSTER_ID, ID
-        """
-        acoes_results = db.execute(text(query_acoes)).fetchall()
-        
-        # Organizar ações por cluster
-        acoes_por_cluster = {}
-        for acao in acoes_results:
-            cluster_id = acao[1]
-            if cluster_id not in acoes_por_cluster:
-                acoes_por_cluster[cluster_id] = []
-            
-            acoes_por_cluster[cluster_id].append({
-                "id": acao[0],
-                "acao": acao[2]
-            })
+        # Ações estratégicas mockadas por cluster
+        acoes_por_cluster = {
+            0: [
+                {"id": 1, "acao": "Criar estratégias de retenção (benefícios exclusivos para clientes fiéis)."},
+                {"id": 2, "acao": "Investir em melhoria contínua de suporte para reduzir abertura de tickets."},
+                {"id": 3, "acao": "Explorar upsell e cross-sell, já que esses clientes têm histórico de compras recorrentes."}
+            ],
+            1: [
+                {"id": 1, "acao": "Campanhas de reativação segmentadas, aproveitando o bom NPS para trazê-los de volta."},
+                {"id": 2, "acao": "Oferecer condições comerciais especiais (descontos ou planos flexíveis)."},
+                {"id": 3, "acao": "Investir em nutrição de relacionamento via marketing (newsletter, cases de sucesso)."}
+            ],
+            2: [
+                {"id": 1, "acao": "Priorizar programas de fidelização e benefícios VIP."},
+                {"id": 2, "acao": "Garantir SLA rigoroso para manutenção da satisfação."},
+                {"id": 3, "acao": "Incentivar renovações automáticas e contratos de longo prazo."},
+                {"id": 4, "acao": "Criar comunidades exclusivas (user groups, webinars premium)."}
+            ],
+            3: [
+                {"id": 1, "acao": "Explorar estratégias de ativação (trial de produtos ou pacotes básicos gratuitos)."},
+                {"id": 2, "acao": "Investir em campanhas educacionais para aumentar percepção de valor."},
+                {"id": 3, "acao": "Converter para clientes pagantes com ofertas de entrada."}
+            ],
+            4: [
+                {"id": 1, "acao": "Realizar plano de ação emergencial para entender causas da insatisfação."},
+                {"id": 2, "acao": "Melhorar tempo de resposta e experiência no suporte."},
+                {"id": 3, "acao": "Avaliar revisão de contratos ou substituição de produtos que geram frustração."},
+                {"id": 4, "acao": "Caso o custo de retenção seja muito alto, considerar descontinuar relacionamento com clientes pouco lucrativos."}
+            ]
+        }
         
         # Organizar clusters
         clusters = []
@@ -136,8 +144,6 @@ async def get_cluster_by_id(
         results = db.execute(text(query), {"cluster_id": cluster_id}).fetchall()
 
         acoes_results = db.execute(text(query_acoes), {"cluster_id": cluster_id}).fetchall()
-        
-        print(acoes_results)
         if not results:
             raise HTTPException(status_code=404, detail="Cluster não encontrado")
         
