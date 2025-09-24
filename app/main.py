@@ -12,7 +12,7 @@ app = FastAPI(
 origins = [
     "http://localhost:5173",  # se você roda o React localmente
     "http://127.0.0.1:5173",
-    "https://www.weeldle.com.br" 
+    "https://www.weedle.com.br" 
 ]
 
 app.add_middleware(
