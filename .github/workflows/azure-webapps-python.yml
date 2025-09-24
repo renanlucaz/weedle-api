@@ -40,12 +40,6 @@ jobs:
           pip install --upgrade pip
           pip install -r requirements.txt
 
-      # Optional: Run tests
-      #- name: Run tests
-      #  run: |
-      #    source venv/bin/activate
-      #    pytest
-
       - name: Upload artifact for deployment
         uses: actions/upload-artifact@v4
         with:
