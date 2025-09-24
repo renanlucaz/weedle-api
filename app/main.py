@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import dashboard, clusters
+from app.routers import dashboard, clusters, leads
 
 
 app = FastAPI(
@@ -25,3 +25,4 @@ app.add_middleware(
 
 app.include_router(dashboard.router)
 app.include_router(clusters.router)
+app.include_router(leads.router)

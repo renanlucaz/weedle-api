@@ -40,36 +40,26 @@ async def get_all_clusters(
         
         cluster_results = db.execute(text(query_clusters)).fetchall()
         
-        # Ações estratégicas mockadas por cluster
-        acoes_por_cluster = {
-            0: [
-                {"id": 1, "acao": "Criar estratégias de retenção (benefícios exclusivos para clientes fiéis)."},
-                {"id": 2, "acao": "Investir em melhoria contínua de suporte para reduzir abertura de tickets."},
-                {"id": 3, "acao": "Explorar upsell e cross-sell, já que esses clientes têm histórico de compras recorrentes."}
-            ],
-            1: [
-                {"id": 1, "acao": "Campanhas de reativação segmentadas, aproveitando o bom NPS para trazê-los de volta."},
-                {"id": 2, "acao": "Oferecer condições comerciais especiais (descontos ou planos flexíveis)."},
-                {"id": 3, "acao": "Investir em nutrição de relacionamento via marketing (newsletter, cases de sucesso)."}
-            ],
-            2: [
-                {"id": 1, "acao": "Priorizar programas de fidelização e benefícios VIP."},
-                {"id": 2, "acao": "Garantir SLA rigoroso para manutenção da satisfação."},
-                {"id": 3, "acao": "Incentivar renovações automáticas e contratos de longo prazo."},
-                {"id": 4, "acao": "Criar comunidades exclusivas (user groups, webinars premium)."}
-            ],
-            3: [
-                {"id": 1, "acao": "Explorar estratégias de ativação (trial de produtos ou pacotes básicos gratuitos)."},
-                {"id": 2, "acao": "Investir em campanhas educacionais para aumentar percepção de valor."},
-                {"id": 3, "acao": "Converter para clientes pagantes com ofertas de entrada."}
-            ],
-            4: [
-                {"id": 1, "acao": "Realizar plano de ação emergencial para entender causas da insatisfação."},
-                {"id": 2, "acao": "Melhorar tempo de resposta e experiência no suporte."},
-                {"id": 3, "acao": "Avaliar revisão de contratos ou substituição de produtos que geram frustração."},
-                {"id": 4, "acao": "Caso o custo de retenção seja muito alto, considerar descontinuar relacionamento com clientes pouco lucrativos."}
-            ]
-        }
+        query_acoes = """
+        SELECT 
+            ID,
+            CLUSTER_ID,
+            ACAO
+        FROM CLUSTER_ACOES
+        ORDER BY CLUSTER_ID, ID
+        """
+        acoes_results = db.execute(text(query_acoes)).fetchall()
+        
+        acoes_por_cluster = {}
+        for acao in acoes_results:
+            cluster_id = acao[1]
+            if cluster_id not in acoes_por_cluster:
+                acoes_por_cluster[cluster_id] = []
+            
+            acoes_por_cluster[cluster_id].append({
+                "id": acao[0],
+                "acao": acao[2]
+            })
         
         # Organizar clusters
         clusters = []
@@ -182,71 +172,3 @@ async def get_cluster_by_id(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao buscar cluster: {str(e)}")
-
-
-    """
-    Compara dois clusters lado a lado
-    """
-    try:
-        query = """
-        SELECT 
-            CLUSTER_ID,
-            DS_CLUSTER,
-            TOTAL_TICKETS_ABERTOS,
-            TOTAL_DESCONTO_CONCEDIDO,
-            MEDIA_NPS,
-            QTD_AVALIACOES_NPS,
-            QTD_CONTRATOS,
-            VALOR_TOTAL_CONTRATADO,
-            MEDIA_DIAS_RESOLUCAO_TICKET,
-            N_CLIENTS
-        FROM CLUSTERS
-        WHERE CLUSTER_ID IN (:cluster_id1, :cluster_id2)
-        ORDER BY CLUSTER_ID
-        """
-        
-        results = db.execute(text(query), {
-            "cluster_id1": cluster_id1,
-            "cluster_id2": cluster_id2
-        }).fetchall()
-        
-        if len(results) != 2:
-            raise HTTPException(status_code=404, detail="Um ou ambos os clusters não foram encontrados")
-        
-        cluster1_data = {
-            "cluster_id": results[0][0],
-            "descricao": results[0][1],
-            "total_tickets_abertos": int(results[0][2]) if results[0][2] else 0,
-            "total_desconto_concedido": float(results[0][3]) if results[0][3] else 0,
-            "media_nps": round(float(results[0][4]), 1) if results[0][4] else 0,
-            "qtd_avaliacoes_nps": int(results[0][5]) if results[0][5] else 0,
-            "qtd_contratos": int(results[0][6]) if results[0][6] else 0,
-            "valor_total_contratado": float(results[0][7]) if results[0][7] else 0,
-            "media_dias_resolucao_ticket": float(results[0][8]) if results[0][8] else 0,
-            "n_clients": int(results[0][9]) if results[0][9] else 0
-        }
-        
-        cluster2_data = {
-            "cluster_id": results[1][0],
-            "descricao": results[1][1],
-            "total_tickets_abertos": int(results[1][2]) if results[1][2] else 0,
-            "total_desconto_concedido": float(results[1][3]) if results[1][3] else 0,
-            "media_nps": round(float(results[1][4]), 1) if results[1][4] else 0,
-            "qtd_avaliacoes_nps": int(results[1][5]) if results[1][5] else 0,
-            "qtd_contratos": int(results[1][6]) if results[1][6] else 0,
-            "valor_total_contratado": float(results[1][7]) if results[1][7] else 0,
-            "media_dias_resolucao_ticket": float(results[1][8]) if results[1][8] else 0,
-            "n_clients": int(results[1][9]) if results[1][9] else 0
-        }
-        
-        return {
-            "comparacao": {
-                "cluster_1": cluster1_data,
-                "cluster_2": cluster2_data
-            }
-        }
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao comparar clusters: {str(e)}")
