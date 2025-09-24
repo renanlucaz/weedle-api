@@ -17,6 +17,7 @@ origins = [
     "https://www.weedle.com.br"
 ]
 
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"])
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,  # pode usar ["*"] em dev, mas não em produção
@@ -24,7 +25,6 @@ app.add_middleware(
     allow_methods=["*"],  # ou ["GET", "POST", ...] se quiser limitar
     allow_headers=["*"],  # ou ["Content-Type", "Authorization"]
 )
-app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"])
 
 app.include_router(dashboard.router)
 app.include_router(clusters.router)

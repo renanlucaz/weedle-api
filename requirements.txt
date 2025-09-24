@@ -7,4 +7,3 @@ pyarrow
 scikit-learn
 numpy
 starlette
-gunicorn
