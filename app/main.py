@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.trustedhost import TrustedHostMiddleware
+
 from app.routers import dashboard, clusters, leads
 
 
@@ -12,7 +14,7 @@ app = FastAPI(
 origins = [
     "http://localhost:5173",  # se você roda o React localmente
     "http://127.0.0.1:5173",
-    "https://www.weedle.com.br" 
+    "https://www.weedle.com.br"
 ]
 
 app.add_middleware(
@@ -22,6 +24,7 @@ app.add_middleware(
     allow_methods=["*"],  # ou ["GET", "POST", ...] se quiser limitar
     allow_headers=["*"],  # ou ["Content-Type", "Authorization"]
 )
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"])
 
 app.include_router(dashboard.router)
 app.include_router(clusters.router)
