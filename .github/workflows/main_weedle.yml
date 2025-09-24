@@ -1,74 +1,35 @@
-name: Build and deploy Python app to Azure Web App - weedle
+deploy:
+  runs-on: ubuntu-latest
+  needs: build
+  steps:
+    - name: Download artifact from build job
+      uses: actions/download-artifact@v4
+      with:
+        name: python-app
 
-on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
+    - name: Install dependencies into ./antenv
+      run: |
+        python -m venv antenv
+        source antenv/bin/activate
+        pip install --upgrade pip
+        pip install -r requirements.txt
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read # Required for actions/checkout
+    - name: Login to Azure
+      uses: azure/login@v2
+      with:
+        client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_732E16374354496F932E05D38F727FAE }}
+        tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_04DC151AE2354F898482049044D77132 }}
+        subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_C55DEC6CBF88434DA62740ACAD8E05A3 }}
 
-    steps:
-      - uses: actions/checkout@v4
+    - name: Configure startup command for FastAPI
+      run: |
+        az webapp config set \
+          --name weedle \
+          --resource-group <SEU_RESOURCE_GROUP> \
+          --startup-file "gunicorn -k uvicorn.workers.UvicornWorker main:app --bind=0.0.0.0:\$PORT"
 
-      - name: Set up Python version
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Create and start virtual environment
-        run: |
-          python -m venv venv
-          source venv/bin/activate
-      
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-        
-      # Optional: Run tests here (PyTest, etc.)
-
-      - name: Upload artifact for deployment jobs
-        uses: actions/upload-artifact@v4
-        with:
-          name: python-app
-          path: |
-            .
-            !venv/
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-    permissions:
-      id-token: write # Required for requesting the JWT
-      contents: read # Required for actions/checkout
-
-    steps:
-      - name: Download artifact from build job
-        uses: actions/download-artifact@v4
-        with:
-          name: python-app
-      
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_732E16374354496F932E05D38F727FAE }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_04DC151AE2354F898482049044D77132 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_C55DEC6CBF88434DA62740ACAD8E05A3 }}
-
-      - name: Configure startup command for FastAPI
-        run: |
-          echo "Configuring startup command for FastAPI..."
-          az webapp config set \
-            --name weedle \
-            --resource-group weedle \
-            --startup-file "gunicorn -k uvicorn.workers.UvicornWorker main:app --bind=0.0.0.0:\$PORT"
-
-      - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v3
-        id: deploy-to-webapp
-        with:
-          app-name: 'weedle'
-          slot-name: 'Production'
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v3
+      with:
+        app-name: 'weedle'
+        slot-name: 'Production'
